@@ -1,4 +1,4 @@
-from helper_functions import read_docx, read_pdf, handle_other_option, generate_article, generate_title, generate_audio, generate_image, stream_data
+from helper_functions import read_docx, read_pdf, handle_other_option, generate_article, generate_title, generate_audio
 
 import streamlit as st
 import openai
