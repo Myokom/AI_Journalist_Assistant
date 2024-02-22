@@ -1,15 +1,15 @@
-import docx2txt
-import pdfplumber
 import streamlit as st
-
-from openai import OpenAI
 import openai
-
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-
-import time
+from docx import Document
+from gtts import gTTS
+import io
 import os
+import time
+import pdfplumber
+import docx2txt
+
+
+
 
 
 def read_docx(file):
@@ -120,3 +120,23 @@ def generate_image(prompt):
 
     image_url = response.data[0].url
     return image_url
+
+
+
+def generate_audio(text, language='en', slow=False):
+    """
+    Generates an audio file from the given text using Google Text-to-Speech.
+
+    :param text: The text to convert to speech.
+    :param language: The language of the text. Default is English ('en').
+    :param slow: Whether to read the text more slowly. Default is False.
+    :return: The path to the generated audio file.
+    """
+    try:
+        tts = gTTS(text=text, lang=language, slow=False)
+        file_path = "temp_audio.mp3"
+        tts.save(file_path)
+        return file_path
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        return None

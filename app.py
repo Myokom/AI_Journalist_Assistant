@@ -1,16 +1,15 @@
-import streamlit as st
-from helper_functions import read_docx, read_pdf, handle_other_option, generate_article, generate_title, generate_image, stream_data
+from helper_functions import read_docx, read_pdf, handle_other_option, generate_article, generate_title, generate_audio, generate_image, stream_data
 
+import streamlit as st
 import openai
-from openai import OpenAI
-from langchain.llms import OpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from docx import Document
+from gtts import gTTS
 
 import io
-import time
 import os
-from docx import Document
+import time
+import pdfplumber
+import docx2txt
 
 
 def main():
@@ -32,6 +31,10 @@ def main():
     st.title("🖋️ AI Journalist Assistant")
     st.subheader("A tool to help you draft your article and generate a catchy title for your next big story!")
 
+    if 'article' not in st.session_state:
+        st.session_state.article = ""
+    if 'title' not in st.session_state:
+        st.session_state.title = ""
 
 
     with st.sidebar:
@@ -116,36 +119,60 @@ def main():
                 st.write("Brewing article... 🍵")
 
                 # Generate article and title
-                article = generate_article(user_input, article_type, tone_style, target_audience, openai_api_key)
-                title = generate_title(article, title_style, title_lenght, openai_api_key)
+                st.session_state.article  = generate_article(user_input, article_type, tone_style, target_audience, openai_api_key)
+                st.session_state.title = generate_title(st.session_state.article, title_style, title_lenght, openai_api_key)
+
                 
                 # Update status
                 status.update(label="Ta-da! All done! 🌟", state="complete", expanded=False)
-        
-            st.subheader(title)
-            #st.write_stream(stream_data(article)) 
-            st.markdown(article)
-        
         else: st.warning("Please enter your OpenAI API Key to generate articles.")
-            
+        
+    st.subheader(st.session_state.title)
+            #st.write_stream(stream_data(article)) 
+    st.markdown(st.session_state.article)
+
+    if st.session_state.article and st.session_state.title: 
         st.divider()
+        st.subheader("Article Options")   
+            
+    col1, col2 = st.columns(2)
+    with col1:
+        # Check if the article and title are available in session state
+        if st.session_state.article and st.session_state.title:
+            st.subheader("Convert Article to Word Document")
+            # Create a Word document
+            doc = Document()
+            doc.add_heading(st.session_state.title, level=1)
+            doc.add_paragraph(st.session_state.article)
 
-        # Create a Word document
-        doc = Document()
-        doc.add_heading(title, level=1)
-        doc.add_paragraph(article)
+            # Save the document to a BytesIO object
+            file_stream = io.BytesIO()
+            doc.save(file_stream)
+            file_stream.seek(0)
 
-        # Save the document to a BytesIO object
-        file_stream = io.BytesIO()
-        doc.save(file_stream)
-        file_stream.seek(0)
+            # Generate a file name using the title
+            safe_title = "".join([c for c in st.session_state.title if c.isalpha() or c.isdigit() or c==' ']).rstrip()
+            file_name = f"{safe_title}.docx"
 
-        # Create a download button
-        file_name = f"{title}.docx"
-        st.download_button(label="Download Article as Word File",
-                           data=file_stream,
-                           file_name=file_name,
-                           mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            # Create a download button
+            st.download_button(label="Download Article as Word File",
+                            data=file_stream,
+                            file_name=file_name,
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    with col2:
+        if st.session_state.article and st.session_state.title:
+            st.subheader("Convert Article to Audio")
+            if st.button("Generate Audio"):
+                with st.spinner('Generating audio, please wait...'):
+                    audio_file_path = generate_audio(st.session_state.article)
+                    st.success("Audio file generated successfully!")
+                    audio_file = open(audio_file_path, 'rb')
+                    st.audio(audio_file.read(), format='audio/mpeg')
+
+                    # Clean up: remove the temp audio file after use
+                    os.remove(audio_file_path)
+
+
         
             
 
