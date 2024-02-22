@@ -95,34 +95,6 @@ def generate_title(article, title_style, title_lenght, openai_api_key):
     # Remove quotation marks if present
     return generated_title.strip('\"')
 
-
-
-### Functions for further development
-
-def stream_data(data):
-    """ 'stream' the article and display it word by word"""
-    for word in data.split():
-        yield word + " "
-        time.sleep(0.02)
-
-
-def generate_image(prompt):
-    """ Generate an image based on the provided prompt which is the article title."""
-    client = OpenAI()
-
-    response = client.images.generate(
-        model="dall-e-3",
-        prompt=prompt,
-        size="1024x1024",
-        quality="standard",
-        n=1,
-    )
-
-    image_url = response.data[0].url
-    return image_url
-
-
-
 def generate_audio(text, language='en', slow=False):
     """
     Generates an audio file from the given text using Google Text-to-Speech.
@@ -140,3 +112,31 @@ def generate_audio(text, language='en', slow=False):
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return None
+
+
+### Functions for further development
+
+#def stream_data(data):
+#    """ 'stream' the article and display it word by word"""
+#    for word in data.split():
+#        yield word + " "
+#        time.sleep(0.02)
+#
+#
+#def generate_image(prompt):
+#    """ Generate an image based on the provided prompt which is the article title."""
+#    client = OpenAI()
+#
+#    response = client.images.generate(
+#        model="dall-e-3",
+#        prompt=prompt,
+#        size="1024x1024",
+#        quality="standard",
+#        n=1,
+#    )
+#
+#    image_url = response.data[0].url
+#    return image_url
+
+
+
